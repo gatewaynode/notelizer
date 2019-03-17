@@ -16,9 +16,9 @@ test:
 		--cov-report=html:coverage-report \
 		tests/
 build:
-	pyinstaller --onefile journalizer.py
+	if [ -d "build" ]; then rm -rfv build; fi
+	if [ -d "dist" ]; then rm -rfv dist; fi
+	pyinstaller --onefile notelizer.py
 install:
-	if [ -d "build" ]; then rm -rf build; fi
-	if [ -d "dist" ]; then rm -rf dist; fi
 	if [ -f "~/.local/bin/no" ]; then rm -rf ~/.local/bin/no; fi
-	cp dist/notelizer ~/.local/bin/no
+	cp -v dist/notelizer ~/.local/bin/no

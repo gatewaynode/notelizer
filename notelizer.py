@@ -9,6 +9,8 @@ import sys
 import tempfile
 import subprocess
 import datetime
+import shlex
+import json
 import traceback
 import logging
 from pprint import pprint
@@ -35,7 +37,7 @@ def upsert_dir():
             logging.error(traceback.format_exc())
 
 # Use VIM as the text entry editor
-def edit_journal():
+def edit_notes():
     # stamp = datetime.datetime()
     EDITOR = os.environ.get('EDITOR', 'vim')
     
@@ -53,9 +55,16 @@ def edit_journal():
         sys.exit(0)
 
 # Write or append with some context
-def write_journal(journal_entry, append_state):
+def write_notes(journal_entry, append_state, prefix_data = "", suffix_data = ""):
     # Prepend and append some context
-    final_write_state = "---\n{}\n---\n{}\n".format(str(journal_date.time()), journal_entry)
+    if prefix_data and suffix_data:
+        journal_entry = "{}\n---\n{}---\n{}\n".format(prefix_data, journal_entry, suffix_data)
+    if prefix_data and not suffix_data:
+        journal_entry = "{}\n---\n{}".format(prefix_data, journal_entry)
+    if suffix_data and not prefix_data:
+        journal_entry = "{}\n---\n{}\n".format(journal_entry, suffix_data)
+    # No need to test final possible data state as we do nothing in that case anyways
+    final_write_state = "---\n{}\n---\n{}".format(str(journal_date.time()), journal_entry)
     
     if append_state:
         try:
@@ -70,12 +79,28 @@ def write_journal(journal_entry, append_state):
         except Exception as e:
             logging.error(traceback.format_exc())
 
+def tagging():
+    prefix_data = shlex.split(input("Tags: "))
+    if prefix_data:
+        return(json.dumps(prefix_data))
+    else:
+        return(False)
+
+def links():
+    suffix_data = shlex.split(input("Links: "))
+    if suffix_data:
+        return(json.dumps(suffix_data))
+    else:
+        return(False)
+    
 def main():
     # Check that our journal dir exists
     if os.path.isdir(journal_path):
         append_state = upsert_dir()
-        journal_entry = edit_journal()
-        write_journal(journal_entry, append_state)
+        prefix_data = tagging()
+        journal_entry = edit_notes()
+        suffix_data = links()
+        write_notes(journal_entry, append_state, prefix_data, suffix_data)
     else:
         setup = input("Journal files not found, do you want to create them? (Y/N): ")
         
@@ -83,7 +108,10 @@ def main():
             os.makedirs(journal_path)
             print("Journal entrie will be stored in: {}".format(journal_path))
             input("Press any key to continue.", _)
-            journal_entry = edit_journal()
+            prefix_data = tagging()
+            journal_entry = edit_notes()
+            suffix_data = links()
+            write_notes(journal_entry, False, prefix_data, suffix_data)
         else:
             print("Nothing else to do.  Exiting")
             sys.exit(0)
