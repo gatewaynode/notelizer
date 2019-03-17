@@ -20,5 +20,7 @@ build:
 	if [ -d "dist" ]; then rm -rfv dist; fi
 	pyinstaller --onefile notelizer.py
 install:
-	if [ -f "~/.local/bin/no" ]; then rm -rf ~/.local/bin/no; fi
+	if [ -f "~/.local/bin/no" ]; then rm -rfv ~/.local/bin/no; fi
 	cp -v dist/notelizer ~/.local/bin/no
+	if [ -d "build" ]; then rm -rfv build; fi
+	if [ -d "dist" ]; then rm -rfv dist; fi
